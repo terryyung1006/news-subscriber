@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package news_subscriber.v1;
+
+option go_package = "news-subscriber-core/api/proto/v1;news_subscriber_v1";
+
+
+service AuthService {
+  rpc GoogleLogin(GoogleLoginRequest) returns (GoogleLoginResponse);
+  rpc CompleteSignup(CompleteSignupRequest) returns (CompleteSignupResponse);
+}
+
+message GoogleLoginRequest {
+  string id_token = 1;
+}
+
+enum LoginStatus {
+  UNKNOWN = 0;
+  LOGGED_IN = 1;
+  NEEDS_INVITE = 2;
+}
+
+message GoogleLoginResponse {
+  LoginStatus status = 1;
+  string session_token = 2;
+  string user_id = 3;
+  string email = 4; // Return email so frontend can show it
+}
+
+message CompleteSignupRequest {
+  string id_token = 1;
+  string invite_code = 2;
+}
+
+message CompleteSignupResponse {
+  string session_token = 1;
+  string user_id = 2;
+}
+

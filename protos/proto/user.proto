@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package news_subscriber.v1;
+
+option go_package = "news-subscriber-core/api/proto/v1;news_subscriber_v1";
+
+service UserService {
+  rpc GetPreferences(GetPreferencesRequest) returns (GetPreferencesResponse);
+  rpc AddPreference(AddPreferenceRequest) returns (AddPreferenceResponse);
+  rpc UpdatePreference(UpdatePreferenceRequest) returns (UpdatePreferenceResponse);
+  rpc DeletePreference(DeletePreferenceRequest) returns (DeletePreferenceResponse);
+}
+
+message Preference {
+  string id = 1;
+  string content = 2;
+}
+
+message GetPreferencesRequest {
+  string user_id = 1;
+}
+
+message GetPreferencesResponse {
+  repeated Preference preferences = 1;
+}
+
+message AddPreferenceRequest {
+  string user_id = 1;
+  string content = 2;
+}
+
+message AddPreferenceResponse {
+  Preference preference = 1;
+}
+
+message UpdatePreferenceRequest {
+  string user_id = 1;
+  string preference_id = 2;
+  string content = 3;
+}
+
+message UpdatePreferenceResponse {
+  Preference preference = 1;
+}
+
+message DeletePreferenceRequest {
+  string user_id = 1;
+  string preference_id = 2;
+}
+
+message DeletePreferenceResponse {
+  bool success = 1;
+}

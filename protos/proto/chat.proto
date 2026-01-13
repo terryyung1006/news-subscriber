@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package news_subscriber.v1;
+
+option go_package = "news-subscriber-core/api/proto/v1;news_subscriber_v1";
+
+service ChatService {
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+}
+
+message Message {
+  string id = 1;
+  string role = 2; // "user" or "assistant"
+  string content = 3;
+  string timestamp = 4;
+}
+
+message SendMessageRequest {
+  string user_id = 1;
+  string message = 2;
+  string context_report_id = 3; // Optional: ID of the report being discussed
+}
+
+message SendMessageResponse {
+  Message message = 1;
+  repeated string suggested_preferences = 2; // Suggestions for new cards
+}

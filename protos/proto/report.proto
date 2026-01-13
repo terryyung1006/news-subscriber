@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package news_subscriber.v1;
+
+option go_package = "news-subscriber-core/api/proto/v1;news_subscriber_v1";
+
+service ReportService {
+  rpc GetLatestReport(GetLatestReportRequest) returns (GetLatestReportResponse);
+  rpc GenerateReport(GenerateReportRequest) returns (GenerateReportResponse);
+}
+
+message Report {
+  string id = 1;
+  string content = 2; // Markdown content
+  string created_at = 3;
+}
+
+message GetLatestReportRequest {
+  string user_id = 1;
+}
+
+message GetLatestReportResponse {
+  Report report = 1;
+}
+
+message GenerateReportRequest {
+  string user_id = 1;
+}
+
+message GenerateReportResponse {
+  Report report = 1;
+}

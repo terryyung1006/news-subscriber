@@ -1,0 +1,16 @@
+server:
+  port: ":8080"
+
+chroma:
+  address: "http://localhost:8000"
+
+database:
+  host: "localhost"
+  port: 5433
+  user: "user"
+  password: "password"
+  dbname: "news_subscriber"
+  sslmode: "disable"
+
+google:
+  client_id: "769446235216-3lk6p56df5v6dtaiu91jed38tunr8h1p.apps.googleusercontent.com"  # TODO: Replace with actual client ID

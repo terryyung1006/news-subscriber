@@ -1,0 +1,7 @@
+backup.tar.gz
+.DS_Store
+node_modules
+.env
+.env.local
+.idea
+.vscode

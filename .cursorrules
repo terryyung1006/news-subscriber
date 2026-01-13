@@ -1,0 +1,38 @@
+# Antigravity AI Agent Rules
+
+You must follow these rules when working on this codebase:
+
+1.  **Reuse Existing Code**: Do not create a new file if there is existing code that can achieve the same functionality. Always check for existing utilities, functions, or scripts before adding new ones.
+
+2.  **Necessity of New Scripts**: Only add new scripts if they are essential for the repository and intended to be committed to Git. Avoid creating files for one-off operations; use temporary methods or run commands directly if possible.
+
+3.  **Clean Repository Hierarchy**: Ensure any new file is placed in the appropriate directory. Maintain a clean and logical project structure. Do not clutter the root or unrelated directories.
+
+4.  **gRPC & Proto First**: All API communication between services must be implemented using gRPC. When modifying APIs:
+    - **NEVER edit proto files directly** in `news-subscriber-frontend/proto-repo/` or `news-subscriber-core/proto-repo/` - these are git submodules
+    - **ALWAYS edit proto files** in the `news-subscriber-grpc-proto` repository first
+    - After updating `news-subscriber-grpc-proto`, update submodules in both frontend and core:
+      - Frontend: `cd news-subscriber-frontend && git submodule update --remote proto-repo`
+      - Core: `cd news-subscriber-core && git submodule update --remote proto-repo`
+    - Then regenerate proto code in each service (frontend: `npm run gen-proto`, core: `make gen-proto`)
+
+5.  **Clean Root Directory**: The root folder should ONLY contain:
+    - `.cursorrules` (this file)
+    - `README.md` (project overview with links)
+    - `ARCHITECTURE.md` (system architecture documentation)
+    - Individual service directories (e.g., `news-subscriber-core`, `news-subscriber-frontend`)
+    
+    All other files (docker-compose, Makefiles, setup guides, etc.) belong in their respective service directories.
+
+6.  **Feature Documentation Structure**: For new features:
+    - Create a subfolder in the service's `spec/` directory (e.g., `news-subscriber-core/spec/google-login/`)
+    - Each feature spec folder contains ONLY TWO files:
+      - `README.md` - Brief introduction describing what the feature is about
+      - `implementation.md` - Detailed specification with code examples showing exactly how to implement
+    - This structure serves as both planning documentation and implementation record
+    - Keep documentation minimal and focused
+
+7.  **Limit Documentation**: Avoid creating excessive documentation files. Use the `spec/` structure for features, and keep standalone docs to a minimum.
+
+8.  **No Example/Template Files**: Do not create example files, template files, or "how-to" documentation unless explicitly requested by the user. When answering questions about how things work, provide explanations in the conversation rather than creating new files in the codebase.
+

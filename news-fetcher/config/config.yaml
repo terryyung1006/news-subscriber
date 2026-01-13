@@ -1,0 +1,37 @@
+kafka:
+  bootstrap_servers: "localhost:9092"
+  topic: "news"
+  compression_type: "snappy"
+  acks: "all"
+  retries: 3
+
+worker:
+  fetch_interval: "1h"
+  max_workers: 5
+  graceful_shutdown_timeout: "30s"
+
+logging:
+  level: "info"
+  format: "json"
+
+fetchers:
+  - name: "newsapi"
+    type: "newsapi"
+    url: "https://newsapi.org/v2/everything"
+    api_key: "affe1f17d0b8423d9418a52bafb5a656"
+    rate_limit: "1s"
+    timeout: "30s"
+    max_retries: 3
+    user_agent: "NewsFetcher/1.0"
+    enabled: true
+
+  - name: "guardian"
+    type: "guardian"
+    url: "https://content.guardianapis.com/search"
+    api_key: "${GUARDIAN_API_KEY}"
+    rate_limit: "1s"
+    timeout: "30s"
+    max_retries: 3
+    user_agent: "NewsFetcher/1.0"
+    enabled: true
+
