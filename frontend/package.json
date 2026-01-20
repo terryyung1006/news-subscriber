@@ -7,9 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "install-proto": "git submodule update --init --recursive",
-    "gen-proto": "mkdir -p src/lib/proto && protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=src/lib/proto --ts_proto_opt=esModuleInterop=true --ts_proto_opt=outputServices=grpc-js --ts_proto_opt=env=node -I proto-repo/proto proto-repo/proto/*.proto",
-    "update-proto": "npm run install-proto && npm run gen-proto"
+    "gen-proto": "mkdir -p src/lib/proto && protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=src/lib/proto --ts_proto_opt=esModuleInterop=true --ts_proto_opt=outputServices=grpc-js --ts_proto_opt=env=node -I ../protos/proto ../protos/proto/*.proto",
+    "update-proto": "npm run gen-proto"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.3",
