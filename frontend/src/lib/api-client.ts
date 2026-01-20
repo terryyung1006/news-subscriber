@@ -66,15 +66,17 @@ export const apiClient = {
   },
   chat: {
     sendMessage: async (userId: string, message: string, contextReportId?: string) => {
-      // Call ChatService.SendMessage
-      return {
-        message: {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: "I received your message: " + message,
-        } as ChatMessage,
-        suggestedPreferences: [],
-      };
+      const res = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          // In a real app, you'd attach the session token here
+        },
+        body: JSON.stringify({ userId, message, contextReportId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Chat failed');
+      return data;
     },
   },
 };

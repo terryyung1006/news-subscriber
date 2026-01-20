@@ -17,19 +17,48 @@ export function ChatInterface() {
     { id: "1", role: "assistant", content: "Hello! How can I help you refine your news feed today?" },
   ])
   const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSend = () => {
-    if (!input.trim()) return
-    const newMessage: Message = { id: Date.now().toString(), role: "user", content: input }
-    setMessages([...messages, newMessage])
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return
+    
+    const userMessage: Message = { id: Date.now().toString(), role: "user", content: input }
+    setMessages(prev => [...prev, userMessage])
     setInput("")
-    // Simulate response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { id: (Date.now() + 1).toString(), role: "assistant", content: "I can help with that. Would you like to add a new topic about 'Quantum Computing'?" },
-      ])
-    }, 1000)
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: "user_123", // TODO: Get from auth context
+          message: userMessage.content 
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to send message');
+      
+      const data = await response.json();
+      
+      // The backend returns { message: { ... } }
+      if (data.message) {
+        setMessages(prev => [...prev, {
+          id: data.message.id,
+          role: "assistant",
+          content: data.message.content
+        }]);
+      }
+    } catch (error) {
+      console.error(error);
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: "Sorry, I encountered an error processing your request."
+      }]);
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
