@@ -12,13 +12,10 @@ gen-proto:
 	mkdir -p api/proto/v1
 	protoc --go_out=. --go_opt=module=news-subscriber-core \
 	--go-grpc_out=. --go-grpc_opt=module=news-subscriber-core \
-	-I proto-repo/proto \
-	proto-repo/proto/*.proto
+	-I ../protos/proto \
+	../protos/proto/*.proto
 
-install-proto:
-	git submodule update --init --recursive
-
-update-proto: install-proto gen-proto
+update-proto: gen-proto
 
 # Utility commands
 generate-invites:
