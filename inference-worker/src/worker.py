@@ -36,10 +36,11 @@ def handle_task(task_data):
         # Extract arguments
         question = task_data.get('payload', {}).get('question')
         user_id = task_data.get('payload', {}).get('user_id')
+        user_name = task_data.get('payload', {}).get('user_name', 'User')
         
         if question and user_id:
             # CALL THE FUNCTION
-            result = process_question(question, user_id)
+            result = process_question(question, user_id, user_name)
         else:
             result = {"error": "Missing question or user_id", "status": "failed"}
             

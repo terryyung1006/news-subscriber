@@ -14,5 +14,5 @@
 
 ## Configuration
 -   **Redis**: `localhost:6379`
--   **Ollama**: `localhost:11434` (Model: `llama3`)
+-   **Ollama**: `localhost:11434` (Model: `phi3`)
 -   **Queue Name**: `inference_queue`
