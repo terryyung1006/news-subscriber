@@ -17,8 +17,9 @@ message Message {
 
 message SendMessageRequest {
   string user_id = 1;
-  string message = 2;
-  string context_report_id = 3; // Optional: ID of the report being discussed
+  string user_name = 2;
+  string message = 3;
+  string context_report_id = 4; // Optional: ID of the report being discussed
 }
 
 message SendMessageResponse {

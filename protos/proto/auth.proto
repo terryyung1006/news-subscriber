@@ -25,6 +25,7 @@ message GoogleLoginResponse {
   string session_token = 2;
   string user_id = 3;
   string email = 4; // Return email so frontend can show it
+  string name = 5;
 }
 
 message CompleteSignupRequest {
@@ -35,5 +36,6 @@ message CompleteSignupRequest {
 message CompleteSignupResponse {
   string session_token = 1;
   string user_id = 2;
+  string name = 3;
 }
 

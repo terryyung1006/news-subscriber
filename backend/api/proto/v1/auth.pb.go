@@ -120,6 +120,7 @@ type GoogleLoginResponse struct {
 	SessionToken  string                 `protobuf:"bytes,2,opt,name=session_token,json=sessionToken,proto3" json:"session_token,omitempty"`
 	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Email         string                 `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"` // Return email so frontend can show it
+	Name          string                 `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -182,6 +183,13 @@ func (x *GoogleLoginResponse) GetEmail() string {
 	return ""
 }
 
+func (x *GoogleLoginResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 type CompleteSignupRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	IdToken       string                 `protobuf:"bytes,1,opt,name=id_token,json=idToken,proto3" json:"id_token,omitempty"`
@@ -238,6 +246,7 @@ type CompleteSignupResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SessionToken  string                 `protobuf:"bytes,1,opt,name=session_token,json=sessionToken,proto3" json:"session_token,omitempty"`
 	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -286,6 +295,13 @@ func (x *CompleteSignupResponse) GetUserId() string {
 	return ""
 }
 
+func (x *CompleteSignupResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 var File_auth_proto protoreflect.FileDescriptor
 
 const file_auth_proto_rawDesc = "" +
@@ -293,19 +309,21 @@ const file_auth_proto_rawDesc = "" +
 	"\n" +
 	"auth.proto\x12\x12news_subscriber.v1\"/\n" +
 	"\x12GoogleLoginRequest\x12\x19\n" +
-	"\bid_token\x18\x01 \x01(\tR\aidToken\"\xa2\x01\n" +
+	"\bid_token\x18\x01 \x01(\tR\aidToken\"\xb6\x01\n" +
 	"\x13GoogleLoginResponse\x127\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x1f.news_subscriber.v1.LoginStatusR\x06status\x12#\n" +
 	"\rsession_token\x18\x02 \x01(\tR\fsessionToken\x12\x17\n" +
 	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x14\n" +
-	"\x05email\x18\x04 \x01(\tR\x05email\"S\n" +
+	"\x05email\x18\x04 \x01(\tR\x05email\x12\x12\n" +
+	"\x04name\x18\x05 \x01(\tR\x04name\"S\n" +
 	"\x15CompleteSignupRequest\x12\x19\n" +
 	"\bid_token\x18\x01 \x01(\tR\aidToken\x12\x1f\n" +
 	"\vinvite_code\x18\x02 \x01(\tR\n" +
-	"inviteCode\"V\n" +
+	"inviteCode\"j\n" +
 	"\x16CompleteSignupResponse\x12#\n" +
 	"\rsession_token\x18\x01 \x01(\tR\fsessionToken\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId*;\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name*;\n" +
 	"\vLoginStatus\x12\v\n" +
 	"\aUNKNOWN\x10\x00\x12\r\n" +
 	"\tLOGGED_IN\x10\x01\x12\x10\n" +
