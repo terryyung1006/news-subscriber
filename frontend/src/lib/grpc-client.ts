@@ -3,7 +3,10 @@ import * as protoLoader from '@grpc/proto-loader';
 import path from 'path';
 
 // Load proto file
-const PROTO_PATH = path.join(process.cwd(), 'proto-repo', 'proto', 'auth.proto');
+// Load proto file
+// In monorepo, protos are at root/protos/proto
+// process.cwd() is root/frontend
+const PROTO_PATH = path.join(process.cwd(), '..', 'protos', 'proto', 'auth.proto');
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,

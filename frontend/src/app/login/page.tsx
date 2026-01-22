@@ -80,6 +80,7 @@ export default function LoginPage() {
         // Store session token
         localStorage.setItem('session_token', data.sessionToken);
         localStorage.setItem('user_id', data.userId);
+        localStorage.setItem('user_name', data.name);
         router.push('/dashboard');
       } else if (data.status === 'NEEDS_INVITE') {
         console.log('Status is NEEDS_INVITE, showing input...');
@@ -110,6 +111,7 @@ export default function LoginPage() {
       // Store session token
       localStorage.setItem('session_token', data.sessionToken);
       localStorage.setItem('user_id', data.userId);
+      localStorage.setItem('user_name', data.name);
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'An error occurred during signup');

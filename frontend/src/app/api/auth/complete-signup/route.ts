@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       sessionToken: response.session_token,
       userId: response.user_id,
+      name: response.name,
     });
   } catch (error: any) {
     console.error('Complete signup error:', error);

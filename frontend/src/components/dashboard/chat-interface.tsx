@@ -28,11 +28,14 @@ export function ChatInterface() {
     setIsLoading(true)
 
     try {
+      const currentUserId = localStorage.getItem('user_id') || 'guest_user';
+      const currentUserName = localStorage.getItem('user_name') || 'Guest';
       const response = await fetch('/api/chat/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          userId: "user_123", // TODO: Get from auth context
+          userId: currentUserId,
+          userName: currentUserName,
           message: userMessage.content 
         }),
       });
@@ -83,6 +86,13 @@ export function ChatInterface() {
             </div>
           </div>
         ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-muted text-muted-foreground max-w-[80%] rounded-lg px-4 py-2 text-sm animate-pulse">
+              Assistant is thinking...
+            </div>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="px-0 pt-4">
         <form
@@ -96,8 +106,9 @@ export function ChatInterface() {
             placeholder="Type your message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            disabled={isLoading}
           />
-          <Button type="submit" size="icon">
+          <Button type="submit" size="icon" disabled={isLoading}>
             <Send className="h-4 w-4" />
             <span className="sr-only">Send</span>
           </Button>
