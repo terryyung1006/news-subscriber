@@ -29,7 +29,19 @@ services:
     volumes:
       - ollama_data:/root/.ollama
 
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: news_subscriber_chroma
+    ports:
+      - "8000:8000"
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+    volumes:
+      - chroma_data:/chroma/chroma
+
 volumes:
   postgres_data:
   redis_data:
   ollama_data:
+  chroma_data:
