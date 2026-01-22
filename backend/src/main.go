@@ -99,8 +99,9 @@ func main() {
 			}
 
 			var req struct {
-				UserId  string `json:"user_id"`
-				Message string `json:"message"`
+				UserId   string `json:"user_id"`
+				UserName string `json:"user_name"`
+				Message  string `json:"message"`
 			}
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 				http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -110,8 +111,9 @@ func main() {
 			// Call the service method
 			// Note: We are adapting the HTTP request to the gRPC service method signature
 			resp, err := svc.SendMessage(context.Background(), &pb.SendMessageRequest{
-				UserId:  req.UserId,
-				Message: req.Message,
+				UserId:   req.UserId,
+				UserName: req.UserName,
+				Message:  req.Message,
 			})
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Service error: %v", err), http.StatusInternalServerError)

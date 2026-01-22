@@ -20,6 +20,7 @@ type InferenceTask struct {
 
 type QuestionPayload struct {
 	UserId   string `json:"user_id"`
+	UserName string `json:"user_name"`
 	Question string `json:"question"`
 }
 
@@ -40,7 +41,8 @@ func (s *Service) SendMessage(ctx context.Context, req *pb.SendMessageRequest) (
 		JobId: jobID,
 		Type:  "process_question",
 		Payload: QuestionPayload{
-			UserId:   "user_123", // TODO: Get actual user ID from context
+			UserId:   req.UserId,
+			UserName: req.UserName,
 			Question: req.Message,
 		},
 	}
@@ -57,10 +59,10 @@ func (s *Service) SendMessage(ctx context.Context, req *pb.SendMessageRequest) (
 		return nil, fmt.Errorf("failed to enqueue task: %v", err)
 	}
 
-	// 4. Poll for result (Simple polling for now, max 30 seconds)
+	// 4. Poll for result (Simple polling for now, max 90 seconds)
 	// In a real production app, we might return the JobID to the client and let them poll,
 	// or use a stream/websocket. For this "simple" version, we block and wait.
-	timeout := time.After(30 * time.Second)
+	timeout := time.After(90 * time.Second)
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 
