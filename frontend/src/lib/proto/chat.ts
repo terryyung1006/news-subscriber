@@ -31,6 +31,7 @@ export interface Message {
 
 export interface SendMessageRequest {
   userId: string;
+  userName: string;
   message: string;
   /** Optional: ID of the report being discussed */
   contextReportId: string;
@@ -153,7 +154,7 @@ export const Message: MessageFns<Message> = {
 };
 
 function createBaseSendMessageRequest(): SendMessageRequest {
-  return { userId: "", message: "", contextReportId: "" };
+  return { userId: "", userName: "", message: "", contextReportId: "" };
 }
 
 export const SendMessageRequest: MessageFns<SendMessageRequest> = {
@@ -161,11 +162,14 @@ export const SendMessageRequest: MessageFns<SendMessageRequest> = {
     if (message.userId !== "") {
       writer.uint32(10).string(message.userId);
     }
+    if (message.userName !== "") {
+      writer.uint32(18).string(message.userName);
+    }
     if (message.message !== "") {
-      writer.uint32(18).string(message.message);
+      writer.uint32(26).string(message.message);
     }
     if (message.contextReportId !== "") {
-      writer.uint32(26).string(message.contextReportId);
+      writer.uint32(34).string(message.contextReportId);
     }
     return writer;
   },
@@ -190,11 +194,19 @@ export const SendMessageRequest: MessageFns<SendMessageRequest> = {
             break;
           }
 
-          message.message = reader.string();
+          message.userName = reader.string();
           continue;
         }
         case 3: {
           if (tag !== 26) {
+            break;
+          }
+
+          message.message = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
             break;
           }
 
@@ -213,6 +225,7 @@ export const SendMessageRequest: MessageFns<SendMessageRequest> = {
   fromJSON(object: any): SendMessageRequest {
     return {
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      userName: isSet(object.userName) ? globalThis.String(object.userName) : "",
       message: isSet(object.message) ? globalThis.String(object.message) : "",
       contextReportId: isSet(object.contextReportId) ? globalThis.String(object.contextReportId) : "",
     };
@@ -222,6 +235,9 @@ export const SendMessageRequest: MessageFns<SendMessageRequest> = {
     const obj: any = {};
     if (message.userId !== "") {
       obj.userId = message.userId;
+    }
+    if (message.userName !== "") {
+      obj.userName = message.userName;
     }
     if (message.message !== "") {
       obj.message = message.message;
@@ -238,6 +254,7 @@ export const SendMessageRequest: MessageFns<SendMessageRequest> = {
   fromPartial<I extends Exact<DeepPartial<SendMessageRequest>, I>>(object: I): SendMessageRequest {
     const message = createBaseSendMessageRequest();
     message.userId = object.userId ?? "";
+    message.userName = object.userName ?? "";
     message.message = object.message ?? "";
     message.contextReportId = object.contextReportId ?? "";
     return message;

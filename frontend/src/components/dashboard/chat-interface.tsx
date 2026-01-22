@@ -17,19 +17,51 @@ export function ChatInterface() {
     { id: "1", role: "assistant", content: "Hello! How can I help you refine your news feed today?" },
   ])
   const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSend = () => {
-    if (!input.trim()) return
-    const newMessage: Message = { id: Date.now().toString(), role: "user", content: input }
-    setMessages([...messages, newMessage])
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return
+    
+    const userMessage: Message = { id: Date.now().toString(), role: "user", content: input }
+    setMessages(prev => [...prev, userMessage])
     setInput("")
-    // Simulate response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { id: (Date.now() + 1).toString(), role: "assistant", content: "I can help with that. Would you like to add a new topic about 'Quantum Computing'?" },
-      ])
-    }, 1000)
+    setIsLoading(true)
+
+    try {
+      const currentUserId = localStorage.getItem('user_id') || 'guest_user';
+      const currentUserName = localStorage.getItem('user_name') || 'Guest';
+      const response = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: currentUserId,
+          userName: currentUserName,
+          message: userMessage.content 
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to send message');
+      
+      const data = await response.json();
+      
+      // The backend returns { message: { ... } }
+      if (data.message) {
+        setMessages(prev => [...prev, {
+          id: data.message.id,
+          role: "assistant",
+          content: data.message.content
+        }]);
+      }
+    } catch (error) {
+      console.error(error);
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: "Sorry, I encountered an error processing your request."
+      }]);
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -54,6 +86,13 @@ export function ChatInterface() {
             </div>
           </div>
         ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-muted text-muted-foreground max-w-[80%] rounded-lg px-4 py-2 text-sm animate-pulse">
+              Assistant is thinking...
+            </div>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="px-0 pt-4">
         <form
@@ -67,8 +106,9 @@ export function ChatInterface() {
             placeholder="Type your message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            disabled={isLoading}
           />
-          <Button type="submit" size="icon">
+          <Button type="submit" size="icon" disabled={isLoading}>
             <Send className="h-4 w-4" />
             <span className="sr-only">Send</span>
           </Button>

@@ -39,6 +39,7 @@ func (s *Service) GoogleLogin(ctx context.Context, req *pb.GoogleLoginRequest) (
 			SessionToken: token,
 			UserId:       user.ID,
 			Email:        user.Email,
+			Name:         user.Name,
 		}, nil
 	}
 
@@ -46,6 +47,7 @@ func (s *Service) GoogleLogin(ctx context.Context, req *pb.GoogleLoginRequest) (
 	return &pb.GoogleLoginResponse{
 		Status: pb.LoginStatus_NEEDS_INVITE,
 		Email:  payload.Email,
+		Name:   payload.Name,
 	}, nil
 }
 
@@ -95,6 +97,7 @@ func (s *Service) CompleteSignup(ctx context.Context, req *pb.CompleteSignupRequ
 	return &pb.CompleteSignupResponse{
 		SessionToken: token,
 		UserId:       user.ID,
+		Name:         user.Name,
 	}, nil
 }
 

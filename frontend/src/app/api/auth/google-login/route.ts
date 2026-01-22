@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       sessionToken: response.session_token || '',
       userId: response.user_id || '',
       email: response.email || '',
+      name: response.name || '',
     });
   } catch (error: any) {
     console.error('Google login error:', error);

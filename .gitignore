@@ -5,4 +5,17 @@ node_modules
 .env.local
 .idea
 .vscode
+
+# Compiled binaries
 backend/server
+backend/main
+
+# Logs
+*.log
+
+# Test output
+backend/test_output.json
+
+# Python cache
+__pycache__/
+*.pyc

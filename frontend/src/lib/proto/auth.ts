@@ -70,6 +70,7 @@ export interface GoogleLoginResponse {
   userId: string;
   /** Return email so frontend can show it */
   email: string;
+  name: string;
 }
 
 export interface CompleteSignupRequest {
@@ -80,6 +81,7 @@ export interface CompleteSignupRequest {
 export interface CompleteSignupResponse {
   sessionToken: string;
   userId: string;
+  name: string;
 }
 
 function createBaseGoogleLoginRequest(): GoogleLoginRequest {
@@ -141,7 +143,7 @@ export const GoogleLoginRequest: MessageFns<GoogleLoginRequest> = {
 };
 
 function createBaseGoogleLoginResponse(): GoogleLoginResponse {
-  return { status: 0, sessionToken: "", userId: "", email: "" };
+  return { status: 0, sessionToken: "", userId: "", email: "", name: "" };
 }
 
 export const GoogleLoginResponse: MessageFns<GoogleLoginResponse> = {
@@ -157,6 +159,9 @@ export const GoogleLoginResponse: MessageFns<GoogleLoginResponse> = {
     }
     if (message.email !== "") {
       writer.uint32(34).string(message.email);
+    }
+    if (message.name !== "") {
+      writer.uint32(42).string(message.name);
     }
     return writer;
   },
@@ -200,6 +205,14 @@ export const GoogleLoginResponse: MessageFns<GoogleLoginResponse> = {
           message.email = reader.string();
           continue;
         }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -215,6 +228,7 @@ export const GoogleLoginResponse: MessageFns<GoogleLoginResponse> = {
       sessionToken: isSet(object.sessionToken) ? globalThis.String(object.sessionToken) : "",
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
       email: isSet(object.email) ? globalThis.String(object.email) : "",
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
     };
   },
 
@@ -232,6 +246,9 @@ export const GoogleLoginResponse: MessageFns<GoogleLoginResponse> = {
     if (message.email !== "") {
       obj.email = message.email;
     }
+    if (message.name !== "") {
+      obj.name = message.name;
+    }
     return obj;
   },
 
@@ -244,6 +261,7 @@ export const GoogleLoginResponse: MessageFns<GoogleLoginResponse> = {
     message.sessionToken = object.sessionToken ?? "";
     message.userId = object.userId ?? "";
     message.email = object.email ?? "";
+    message.name = object.name ?? "";
     return message;
   },
 };
@@ -325,7 +343,7 @@ export const CompleteSignupRequest: MessageFns<CompleteSignupRequest> = {
 };
 
 function createBaseCompleteSignupResponse(): CompleteSignupResponse {
-  return { sessionToken: "", userId: "" };
+  return { sessionToken: "", userId: "", name: "" };
 }
 
 export const CompleteSignupResponse: MessageFns<CompleteSignupResponse> = {
@@ -335,6 +353,9 @@ export const CompleteSignupResponse: MessageFns<CompleteSignupResponse> = {
     }
     if (message.userId !== "") {
       writer.uint32(18).string(message.userId);
+    }
+    if (message.name !== "") {
+      writer.uint32(26).string(message.name);
     }
     return writer;
   },
@@ -362,6 +383,14 @@ export const CompleteSignupResponse: MessageFns<CompleteSignupResponse> = {
           message.userId = reader.string();
           continue;
         }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -375,6 +404,7 @@ export const CompleteSignupResponse: MessageFns<CompleteSignupResponse> = {
     return {
       sessionToken: isSet(object.sessionToken) ? globalThis.String(object.sessionToken) : "",
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
     };
   },
 
@@ -386,6 +416,9 @@ export const CompleteSignupResponse: MessageFns<CompleteSignupResponse> = {
     if (message.userId !== "") {
       obj.userId = message.userId;
     }
+    if (message.name !== "") {
+      obj.name = message.name;
+    }
     return obj;
   },
 
@@ -396,6 +429,7 @@ export const CompleteSignupResponse: MessageFns<CompleteSignupResponse> = {
     const message = createBaseCompleteSignupResponse();
     message.sessionToken = object.sessionToken ?? "";
     message.userId = object.userId ?? "";
+    message.name = object.name ?? "";
     return message;
   },
 };

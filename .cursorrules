@@ -25,14 +25,22 @@ You must follow these rules when working on this codebase:
     All other files (docker-compose, Makefiles, setup guides, etc.) belong in their respective service directories.
 
 6.  **Feature Documentation Structure**: For new features:
-    - Create a subfolder in the service's `spec/` directory (e.g., `news-subscriber-core/spec/google-login/`)
+    - Create a subfolder in `spec/feature/[branch-name]/` (e.g., `spec/feature/inference-worker/`)
     - Each feature spec folder contains ONLY TWO files:
-      - `README.md` - Brief introduction describing what the feature is about
-      - `implementation.md` - Detailed specification with code examples showing exactly how to implement
+      - `reference.md` - Quick reference (commands, key files, config)
+      - `plan.md` - Detailed implementation plan and progress
     - This structure serves as both planning documentation and implementation record
     - Keep documentation minimal and focused
 
 7.  **Limit Documentation**: Avoid creating excessive documentation files. Use the `spec/` structure for features, and keep standalone docs to a minimum.
 
 8.  **No Example/Template Files**: Do not create example files, template files, or "how-to" documentation unless explicitly requested by the user. When answering questions about how things work, provide explanations in the conversation rather than creating new files in the codebase.
+
+9.  **Feature Branch Workflow**:
+    - ALWAYS checkout `master` and pull latest before starting a new feature.
+    - Create a new feature branch: `git checkout -b feature/[feature-name]`.
+    - Create the `spec/feature/[feature-name]/` documentation FIRST.
+    - Implement the feature.
+    - Verify implementation against `plan.md`.
+
 

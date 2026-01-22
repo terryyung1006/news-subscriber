@@ -92,8 +92,9 @@ func (x *Message) GetTimestamp() string {
 type SendMessageRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	UserId          string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Message         string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	ContextReportId string                 `protobuf:"bytes,3,opt,name=context_report_id,json=contextReportId,proto3" json:"context_report_id,omitempty"` // Optional: ID of the report being discussed
+	UserName        string                 `protobuf:"bytes,2,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
+	Message         string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	ContextReportId string                 `protobuf:"bytes,4,opt,name=context_report_id,json=contextReportId,proto3" json:"context_report_id,omitempty"` // Optional: ID of the report being discussed
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -131,6 +132,13 @@ func (*SendMessageRequest) Descriptor() ([]byte, []int) {
 func (x *SendMessageRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
+	}
+	return ""
+}
+
+func (x *SendMessageRequest) GetUserName() string {
+	if x != nil {
+		return x.UserName
 	}
 	return ""
 }
@@ -211,11 +219,12 @@ const file_chat_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04role\x18\x02 \x01(\tR\x04role\x12\x18\n" +
 	"\acontent\x18\x03 \x01(\tR\acontent\x12\x1c\n" +
-	"\ttimestamp\x18\x04 \x01(\tR\ttimestamp\"s\n" +
+	"\ttimestamp\x18\x04 \x01(\tR\ttimestamp\"\x90\x01\n" +
 	"\x12SendMessageRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\x12*\n" +
-	"\x11context_report_id\x18\x03 \x01(\tR\x0fcontextReportId\"\x81\x01\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1b\n" +
+	"\tuser_name\x18\x02 \x01(\tR\buserName\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\x12*\n" +
+	"\x11context_report_id\x18\x04 \x01(\tR\x0fcontextReportId\"\x81\x01\n" +
 	"\x13SendMessageResponse\x125\n" +
 	"\amessage\x18\x01 \x01(\v2\x1b.news_subscriber.v1.MessageR\amessage\x123\n" +
 	"\x15suggested_preferences\x18\x02 \x03(\tR\x14suggestedPreferences2m\n" +
