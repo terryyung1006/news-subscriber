@@ -1,82 +1,101 @@
 import os
 import json
-import redis
 import time
+import pika
 from src.tasks import process_question
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configuration
-REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379')
-QUEUE_NAME = 'inference_queue'
+RABBITMQ_URL = os.getenv('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
+REQUESTS_QUEUE = 'inference.requests'
+RESULTS_QUEUE = 'inference.results'
 
-# Connect to Redis
-try:
-    r = redis.from_url(REDIS_URL)
-    # Ping to verify connection
-    r.ping()
-    print(f"Connected to Redis at {REDIS_URL}")
-except redis.ConnectionError as e:
-    print(f"Failed to connect to Redis: {e}")
-    exit(1)
 
-def handle_task(task_data):
-    """
-    Dispatch the task to the appropriate function.
-    """
-    task_type = task_data.get('type')
-    job_id = task_data.get('job_id')
-    
-    print(f"Received task: {task_type} (Job ID: {job_id})")
+def handle_delivery(channel, method, properties, body):
+    try:
+        data = json.loads(body)
+    except json.JSONDecodeError:
+        print("Error: Failed to decode JSON message")
+        channel.basic_ack(delivery_tag=method.delivery_tag)
+        return
 
-    result = None
-    
-    if task_type == 'process_question':
-        # Extract arguments
-        question = task_data.get('payload', {}).get('question')
-        user_id = task_data.get('payload', {}).get('user_id')
-        user_name = task_data.get('payload', {}).get('user_name', 'User')
-        
-        if question and user_id:
-            # CALL THE FUNCTION
-            result = process_question(question, user_id, user_name)
-        else:
-            result = {"error": "Missing question or user_id", "status": "failed"}
-            
+    correlation_id = data.get('correlation_id', '')
+    user_id = data.get('user_id', '')
+    user_name = data.get('user_name', 'User')
+    question = data.get('question', '')
+
+    print(f"Received task (correlation_id={correlation_id})")
+
+    if not question or not user_id:
+        result = {
+            'correlation_id': correlation_id,
+            'answer': '',
+            'status': 'failed',
+            'error': 'Missing question or user_id',
+        }
     else:
-        print(f"Unknown task type: {task_type}")
-        result = {"error": f"Unknown task type: {task_type}", "status": "failed"}
+        try:
+            raw = process_question(question, user_id, user_name)
+            result = {
+                'correlation_id': correlation_id,
+                'answer': raw.get('response', ''),
+                'status': raw.get('status', 'completed'),
+                'error': raw.get('error', ''),
+            }
+        except Exception as e:
+            result = {
+                'correlation_id': correlation_id,
+                'answer': '',
+                'status': 'failed',
+                'error': str(e),
+            }
 
-    # Save the result back to Redis for the backend to retrieve
-    # Key format: "job_result:{job_id}"
-    if job_id:
-        result_key = f"job_result:{job_id}"
-        # Expire result after 1 hour to save memory
-        r.setex(result_key, 3600, json.dumps(result))
-        print(f"Result saved to {result_key}")
+    channel.basic_publish(
+        exchange='',
+        routing_key=RESULTS_QUEUE,
+        body=json.dumps(result),
+        properties=pika.BasicProperties(
+            delivery_mode=2,
+            content_type='application/json',
+            correlation_id=correlation_id,
+        ),
+    )
+
+    channel.basic_ack(delivery_tag=method.delivery_tag)
+    print(f"Result published for correlation_id={correlation_id}")
+
 
 def start_worker():
-    print(f"Worker listening on queue: '{QUEUE_NAME}'...")
-    
     while True:
         try:
-            # BLPOP blocks until an item is available in the list
-            # It returns a tuple: (queue_name, data)
-            _, message = r.blpop(QUEUE_NAME)
-            
-            # Parse JSON
-            task_data = json.loads(message)
-            
-            # Process
-            handle_task(task_data)
-            
-        except json.JSONDecodeError:
-            print("Error: Failed to decode JSON message")
+            params = pika.URLParameters(RABBITMQ_URL)
+            params.heartbeat = 600
+            connection = pika.BlockingConnection(params)
+            channel = connection.channel()
+
+            channel.queue_declare(queue=REQUESTS_QUEUE, durable=True)
+            channel.queue_declare(queue=RESULTS_QUEUE, durable=True)
+            channel.basic_qos(prefetch_count=1)
+
+            channel.basic_consume(
+                queue=REQUESTS_QUEUE,
+                on_message_callback=handle_delivery,
+            )
+
+            print(f"Worker listening on '{REQUESTS_QUEUE}'...")
+            channel.start_consuming()
+
+        except pika.exceptions.AMQPConnectionError as e:
+            print(f"Connection error: {e}. Retrying in 5s...")
+            time.sleep(5)
+        except KeyboardInterrupt:
+            print("Worker stopped.")
+            break
         except Exception as e:
-            print(f"Error in worker loop: {e}")
-            # Sleep briefly to avoid tight loop in case of persistent errors
-            time.sleep(1)
+            print(f"Unexpected error: {e}. Retrying in 5s...")
+            time.sleep(5)
+
 
 if __name__ == '__main__':
     start_worker()

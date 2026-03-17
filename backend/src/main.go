@@ -25,8 +25,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
-	// Initialize Redis
-	tools.InitRedis()
+	// Initialize RabbitMQ
+	if err := tools.InitRabbitMQ(cfg.RabbitMQ.URL); err != nil {
+		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	}
+	defer tools.RabbitMQ.Close()
 
 	// Initialize PostgreSQL
 	db, err := postgres.NewDB(cfg)
@@ -59,13 +62,10 @@ func main() {
 	// Initialize Service with all dependencies
 	svc := service.NewService(cfg, chromaClient, userRepo, inviteRepo)
 
-	// Run service (just a check for now)
 	ctx := context.Background()
-	go func() {
-		if err := svc.Run(ctx); err != nil {
-			log.Printf("Service error: %v", err)
-		}
-	}()
+	if err := svc.Start(ctx); err != nil {
+		log.Fatalf("Failed to start service: %v", err)
+	}
 
 	// Start gRPC server
 	lis, err := net.Listen("tcp", cfg.Server.Port)
