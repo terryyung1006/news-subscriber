@@ -42,6 +42,9 @@ func (w *Worker) Start() {
 		logrus.Fatalf("Failed to initialize fetchers: %v", err)
 	}
 
+	// Perform immediate fetch on startup
+	w.fetchAllNews()
+
 	// Start the main fetch loop
 	ticker := time.NewTicker(w.config.Worker.FetchInterval)
 	defer ticker.Stop()

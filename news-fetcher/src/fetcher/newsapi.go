@@ -2,16 +2,27 @@ package fetcher
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/url"
+	"sync"
 	"time"
+)
+
+const (
+	NewsAPIFreeTierLimit = 100
 )
 
 // NewsAPIFetcher implements the NewsFetcher interface for NewsAPI.org
 type NewsAPIFetcher struct {
 	*BaseFetcher
-	httpClient *HTTPClient
+	httpClient    *HTTPClient
+	requestCount  int
+	lastResetDate string
+	mu            sync.Mutex
 }
 
 // NewsAPIResponse represents the response structure from NewsAPI
@@ -49,6 +60,14 @@ func (n *NewsAPIFetcher) FetchNews(ctx context.Context) ([]NewsArticle, error) {
 	if err := n.Validate(); err != nil {
 		return nil, err
 	}
+
+	// Check and update daily quota
+	remaining := n.trackRequest()
+	if remaining < 0 {
+		return nil, fmt.Errorf("daily request limit (%d) exceeded", NewsAPIFreeTierLimit)
+	}
+	log.Printf("[NewsAPI] Request %d/%d for today (%d remaining)",
+		n.requestCount, NewsAPIFreeTierLimit, remaining)
 
 	// Build the API URL with parameters
 	apiURL, err := n.buildAPIURL()
@@ -136,6 +155,7 @@ func (n *NewsAPIFetcher) buildAPIURL() (string, error) {
 	// Add default query parameters
 	params := u.Query()
 	params.Set("apiKey", n.config.APIKey)
+	params.Set("q", "business OR finance OR stocks")
 	params.Set("language", "en")
 	params.Set("sortBy", "publishedAt")
 	params.Set("pageSize", "100")
@@ -145,8 +165,32 @@ func (n *NewsAPIFetcher) buildAPIURL() (string, error) {
 }
 
 // generateArticleID creates a unique ID for an article based on its URL
-func generateArticleID(url string) string {
-	// Simple hash-based ID generation
-	// In production, you might want to use a more sophisticated approach
-	return fmt.Sprintf("%x", len(url))
+func generateArticleID(articleURL string) string {
+	hash := sha256.Sum256([]byte(articleURL))
+	return hex.EncodeToString(hash[:16])
+}
+
+// trackRequest tracks API requests and resets counter daily
+// Returns remaining requests for the day (-1 if limit exceeded)
+func (n *NewsAPIFetcher) trackRequest() int {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
+	today := time.Now().Format("2006-01-02")
+
+	// Reset counter if it's a new day
+	if n.lastResetDate != today {
+		n.requestCount = 0
+		n.lastResetDate = today
+		log.Printf("[NewsAPI] New day detected, resetting request counter")
+	}
+
+	n.requestCount++
+
+	remaining := NewsAPIFreeTierLimit - n.requestCount
+	if remaining < 20 {
+		log.Printf("[NewsAPI] WARNING: Only %d requests remaining today", remaining)
+	}
+
+	return remaining
 }

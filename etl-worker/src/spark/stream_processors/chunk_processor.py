@@ -1,9 +1,11 @@
 """
 Chunk processor for splitting text into manageable chunks.
 
-This module handles text chunking with configurable size and overlap.
+This module handles text chunking using sentence-based splitting for better
+semantic coherence in embeddings.
 """
 
+import re
 from typing import List
 
 from pyspark.sql import DataFrame
@@ -17,20 +19,20 @@ class ChunkRowProcessor(StreamProcessor):
     """
     Processor that splits text into chunks for better processing.
 
-    This follows the Single Responsibility Principle by focusing solely
-    on text chunking operations.
+    Uses sentence-based chunking to maintain semantic coherence,
+    keeping chunks under a target size for optimal embedding quality.
     """
 
-    def __init__(self, chunk_size: int, chunk_overlap: int = 50):
+    def __init__(self, max_chunk_size: int = 500, min_chunk_size: int = 100):
         """
         Initialize the chunk processor.
 
         Args:
-            chunk_size: Size of each text chunk
-            chunk_overlap: Overlap between consecutive chunks
+            max_chunk_size: Maximum size of each text chunk (default 500 chars)
+            min_chunk_size: Minimum size before merging with next sentence
         """
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
+        self.max_chunk_size = max_chunk_size
+        self.min_chunk_size = min_chunk_size
 
         # Create the UDF function in __init__ to avoid serialization issues
         self.chunk_text_udf = udf(self._chunk_text, ArrayType(StringType()))
@@ -45,14 +47,15 @@ class ChunkRowProcessor(StreamProcessor):
         Returns:
             DataFrame: Original DataFrame with added chunks column
         """
-        # Apply the UDF - this is safe for streaming DataFrames
         result_df = batch_df.withColumn("chunks", self.chunk_text_udf(col("content")))
-
         return result_df
 
     def _chunk_text(self, text: str) -> List[str]:
         """
-        Split text into chunks with specified size and overlap.
+        Split text into chunks based on sentence boundaries.
+
+        Groups sentences into chunks that stay under max_chunk_size while
+        maintaining semantic coherence.
 
         Args:
             text: Text to split into chunks
@@ -60,24 +63,33 @@ class ChunkRowProcessor(StreamProcessor):
         Returns:
             List[str]: List of text chunks
         """
-
         if not text or not text.strip():
             return []
 
+        # Split by sentence-ending punctuation, keeping the delimiter
+        sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+        sentences = [s.strip() for s in sentences if s.strip()]
+
+        if not sentences:
+            return []
+
         chunks = []
-        text_length = len(text)
-        current_position = 0
+        current_chunk = ""
 
-        while current_position < text_length:
-            end_position = min(current_position + self.chunk_size, text_length)
-            chunk = text[current_position:end_position]
-            chunks.append(chunk)
-
-            # Move to the next chunk's starting position
-            if end_position < text_length:
-                current_position += self.chunk_size - self.chunk_overlap
+        for sentence in sentences:
+            # If adding this sentence exceeds max size, save current chunk
+            if current_chunk and len(current_chunk) + len(sentence) + 1 > self.max_chunk_size:
+                chunks.append(current_chunk.strip())
+                current_chunk = sentence
             else:
-                break
+                current_chunk = f"{current_chunk} {sentence}".strip() if current_chunk else sentence
 
-        print(f" _chunk_text: Returning {len(chunks)} chunks")
+        # Add the last chunk if it meets minimum size or if it's the only content
+        if current_chunk:
+            if len(current_chunk) >= self.min_chunk_size or not chunks:
+                chunks.append(current_chunk.strip())
+            elif chunks:
+                # Merge small final chunk with previous if possible
+                chunks[-1] = f"{chunks[-1]} {current_chunk}".strip()
+
         return chunks

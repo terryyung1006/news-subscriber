@@ -104,7 +104,7 @@ class App:
         # Create array of stream processors in processing order
         stream_processors = [
             LengthProcessor(),  # First: compute length from content
-            ChunkRowProcessor(self.config.get_int("PROCESSING_BATCH_SIZE", 100)),  # Second: chunk the text
+            ChunkRowProcessor(max_chunk_size=500),  # Second: chunk text by sentences
             Embedder(
                 self.config.get_string("CHROMA_EMBEDDING_MODEL", "all-MiniLM-L6-v2"), "chunks"
             ),  # Third: generate embeddings from chunks
@@ -116,7 +116,7 @@ class App:
         )
 
         try:
-            job.start()
+            job.start("news")
         except KeyboardInterrupt:
             logger.info("Shutting down...")
         finally:
