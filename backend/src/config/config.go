@@ -24,6 +24,9 @@ type Config struct {
 	Google struct {
 		ClientID string `yaml:"client_id"`
 	} `yaml:"google"`
+	RabbitMQ struct {
+		URL string `yaml:"url"`
+	} `yaml:"rabbitmq"`
 }
 
 func LoadConfig(path string) (*Config, error) {

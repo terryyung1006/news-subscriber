@@ -1,7 +1,5 @@
-redis
-rq
+pika
 langchain
-langchain-openai
 langchain-community
 python-dotenv
 openai

@@ -12,89 +12,68 @@ import (
 	"github.com/google/uuid"
 )
 
-type InferenceTask struct {
-	JobId   string      `json:"job_id"`
-	Type    string      `json:"type"`
-	Payload interface{} `json:"payload"`
-}
-
-type QuestionPayload struct {
-	UserId   string `json:"user_id"`
-	UserName string `json:"user_name"`
-	Question string `json:"question"`
+type InferenceRequest struct {
+	CorrelationID string            `json:"correlation_id"`
+	UserID        string            `json:"user_id"`
+	UserName      string            `json:"user_name"`
+	Question      string            `json:"question"`
+	Context       map[string]string `json:"context,omitempty"`
 }
 
 type InferenceResult struct {
-	UserId   string `json:"user_id"`
-	Question string `json:"question"`
-	Response string `json:"response"`
-	Status   string `json:"status"`
-	Error    string `json:"error,omitempty"`
+	CorrelationID string `json:"correlation_id"`
+	Answer        string `json:"answer"`
+	Status        string `json:"status"`
+	Error         string `json:"error,omitempty"`
 }
 
 func (s *Service) SendMessage(ctx context.Context, req *pb.SendMessageRequest) (*pb.SendMessageResponse, error) {
-	// 1. Generate a Job ID
-	jobID := uuid.New().String()
+	correlationID := uuid.New().String()
 
-	// 2. Create the task payload
-	task := InferenceTask{
-		JobId: jobID,
-		Type:  "process_question",
-		Payload: QuestionPayload{
-			UserId:   req.UserId,
-			UserName: req.UserName,
-			Question: req.Message,
-		},
+	resultCh := make(chan InferenceResult, 1)
+
+	s.pendingMu.Lock()
+	s.pending[correlationID] = resultCh
+	s.pendingMu.Unlock()
+
+	defer func() {
+		s.pendingMu.Lock()
+		delete(s.pending, correlationID)
+		s.pendingMu.Unlock()
+	}()
+
+	inferenceReq := InferenceRequest{
+		CorrelationID: correlationID,
+		UserID:        req.UserId,
+		UserName:      req.UserName,
+		Question:      req.Message,
 	}
 
-	taskJSON, err := json.Marshal(task)
+	body, err := json.Marshal(inferenceReq)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal task: %v", err)
+		return nil, fmt.Errorf("failed to marshal inference request: %w", err)
 	}
 
-	// 3. Push to Redis Queue
-	// Using RPUSH to add to the tail of the list
-	err = tools.RedisClient.RPush(ctx, "inference_queue", taskJSON).Err()
-	if err != nil {
-		return nil, fmt.Errorf("failed to enqueue task: %v", err)
+	if err := tools.RabbitMQ.Publish(tools.InferenceRequestsQueue, correlationID, body); err != nil {
+		return nil, fmt.Errorf("failed to publish inference request: %w", err)
 	}
 
-	// 4. Poll for result (Simple polling for now, max 90 seconds)
-	// In a real production app, we might return the JobID to the client and let them poll,
-	// or use a stream/websocket. For this "simple" version, we block and wait.
-	timeout := time.After(90 * time.Second)
-	ticker := time.NewTicker(500 * time.Millisecond)
-	defer ticker.Stop()
-
-	resultKey := fmt.Sprintf("job_result:%s", jobID)
-
-	for {
-		select {
-		case <-timeout:
-			return nil, fmt.Errorf("inference timed out")
-		case <-ticker.C:
-			// Check if result exists
-			val, err := tools.RedisClient.Get(ctx, resultKey).Result()
-			if err == nil {
-				// Result found!
-				var result InferenceResult
-				if err := json.Unmarshal([]byte(val), &result); err != nil {
-					return nil, fmt.Errorf("failed to parse result: %v", err)
-				}
-
-				if result.Status == "failed" {
-					return nil, fmt.Errorf("inference failed: %s", result.Error)
-				}
-
-				return &pb.SendMessageResponse{
-					Message: &pb.Message{
-						Id:        jobID,
-						Role:      "assistant",
-						Content:   result.Response,
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
-				}, nil
-			}
+	select {
+	case result := <-resultCh:
+		if result.Status == "failed" {
+			return nil, fmt.Errorf("inference failed: %s", result.Error)
 		}
+		return &pb.SendMessageResponse{
+			Message: &pb.Message{
+				Id:        correlationID,
+				Role:      "assistant",
+				Content:   result.Answer,
+				Timestamp: time.Now().Format(time.RFC3339),
+			},
+		}, nil
+	case <-time.After(90 * time.Second):
+		return nil, fmt.Errorf("inference timed out")
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
 }
