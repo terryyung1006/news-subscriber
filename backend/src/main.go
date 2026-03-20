@@ -52,6 +52,7 @@ func main() {
 	// Initialize repositories
 	userRepo := postgres.NewUserRepository(db)
 	inviteRepo := postgres.NewInviteCodeRepository(db)
+	memoryRepo := postgres.NewMemoryRepository(db)
 
 	// Initialize ChromaDB client
 	chromaClient, err := chroma.NewClient(cfg.Chroma.Address)
@@ -60,7 +61,7 @@ func main() {
 	}
 
 	// Initialize Service with all dependencies
-	svc := service.NewService(cfg, chromaClient, userRepo, inviteRepo)
+	svc := service.NewService(cfg, chromaClient, userRepo, inviteRepo, memoryRepo)
 
 	ctx := context.Background()
 	if err := svc.Start(ctx); err != nil {
@@ -115,6 +116,114 @@ func main() {
 				UserName: req.UserName,
 				Message:  req.Message,
 			})
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Service error: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		// Onboarding status endpoint
+		httpMux.HandleFunc("/api/onboarding/status", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			var req service.GetOnboardingStatusRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, "Invalid request body", http.StatusBadRequest)
+				return
+			}
+
+			resp, err := svc.GetOnboardingStatus(context.Background(), &req)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Service error: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		// Start onboarding endpoint
+		httpMux.HandleFunc("/api/onboarding/start", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			var req service.StartOnboardingRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, "Invalid request body", http.StatusBadRequest)
+				return
+			}
+
+			resp, err := svc.StartOnboarding(context.Background(), &req)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Service error: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		// Send onboarding message endpoint
+		httpMux.HandleFunc("/api/onboarding/message", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			var req service.SendOnboardingMessageRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, "Invalid request body", http.StatusBadRequest)
+				return
+			}
+
+			resp, err := svc.SendOnboardingMessage(context.Background(), &req)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Service error: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		// Get user memories endpoint
+		httpMux.HandleFunc("/api/memories", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			userID := r.URL.Query().Get("userId")
+			if userID == "" {
+				http.Error(w, "userId query parameter required", http.StatusBadRequest)
+				return
+			}
+
+			resp, err := svc.GetUserMemories(context.Background(), &service.GetUserMemoriesRequest{UserID: userID})
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Service error: %v", err), http.StatusInternalServerError)
 				return

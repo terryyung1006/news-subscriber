@@ -29,15 +29,17 @@ type Service struct {
 
 	pendingMu sync.Mutex
 	pending   map[string]chan InferenceResult
+	memoryRepo *postgres.MemoryRepository
 }
 
-func NewService(cfg *config.Config, chroma *chroma.Client, userRepo *postgres.UserRepository, inviteRepo *postgres.InviteCodeRepository) *Service {
+func NewService(cfg *config.Config, chroma *chroma.Client, userRepo *postgres.UserRepository, inviteRepo *postgres.InviteCodeRepository, memoryRepo *postgres.MemoryRepository) *Service {
 	return &Service{
 		cfg:        cfg,
 		chroma:     chroma,
 		userRepo:   userRepo,
 		inviteRepo: inviteRepo,
 		pending:    make(map[string]chan InferenceResult),
+		memoryRepo: memoryRepo,
 	}
 }
 

@@ -46,12 +46,13 @@ func (db *DB) Migrate() error {
 	return db.AutoMigrate(
 		&models.User{},
 		&models.InviteCode{},
+		&models.UserMemory{},
 	)
 }
 
 // Reset drops all tables and recreates them (use with caution!)
 func (db *DB) Reset() error {
-	if err := db.Migrator().DropTable(&models.InviteCode{}, &models.User{}); err != nil {
+	if err := db.Migrator().DropTable(&models.UserMemory{}, &models.InviteCode{}, &models.User{}); err != nil {
 		return fmt.Errorf("failed to drop tables: %w", err)
 	}
 	return db.Migrate()

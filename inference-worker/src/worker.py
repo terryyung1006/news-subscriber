@@ -2,7 +2,7 @@ import os
 import json
 import time
 import pika
-from src.tasks import process_question
+from src.tasks import process_question, process_onboarding
 from dotenv import load_dotenv
 
 load_dotenv()
