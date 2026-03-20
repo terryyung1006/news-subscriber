@@ -21,14 +21,16 @@ type Service struct {
 	chroma     *chroma.Client
 	userRepo   *postgres.UserRepository
 	inviteRepo *postgres.InviteCodeRepository
+	memoryRepo *postgres.MemoryRepository
 }
 
-func NewService(cfg *config.Config, chroma *chroma.Client, userRepo *postgres.UserRepository, inviteRepo *postgres.InviteCodeRepository) *Service {
+func NewService(cfg *config.Config, chroma *chroma.Client, userRepo *postgres.UserRepository, inviteRepo *postgres.InviteCodeRepository, memoryRepo *postgres.MemoryRepository) *Service {
 	return &Service{
 		cfg:        cfg,
 		chroma:     chroma,
 		userRepo:   userRepo,
 		inviteRepo: inviteRepo,
+		memoryRepo: memoryRepo,
 	}
 }
 

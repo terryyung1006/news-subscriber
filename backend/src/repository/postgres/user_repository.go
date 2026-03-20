@@ -57,3 +57,23 @@ func (r *UserRepository) Create(ctx context.Context, email, googleID, name strin
 
 	return user, nil
 }
+
+func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
+	var user models.User
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&user).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *UserRepository) SetOnboardingCompleted(ctx context.Context, userID string) error {
+	return r.db.WithContext(ctx).Model(&models.User{}).
+		Where("id = ?", userID).
+		Update("onboarding_completed", true).Error
+}

@@ -2,7 +2,7 @@ import os
 import json
 import redis
 import time
-from src.tasks import process_question
+from src.tasks import process_question, process_onboarding
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -37,13 +37,24 @@ def handle_task(task_data):
         question = task_data.get('payload', {}).get('question')
         user_id = task_data.get('payload', {}).get('user_id')
         user_name = task_data.get('payload', {}).get('user_name', 'User')
-        
+
         if question and user_id:
             # CALL THE FUNCTION
             result = process_question(question, user_id, user_name)
         else:
             result = {"error": "Missing question or user_id", "status": "failed"}
-            
+
+    elif task_type == 'process_onboarding':
+        # Extract arguments for onboarding
+        conversation = task_data.get('payload', {}).get('conversation', [])
+        user_id = task_data.get('payload', {}).get('user_id')
+        user_name = task_data.get('payload', {}).get('user_name', 'User')
+
+        if user_id:
+            result = process_onboarding(conversation, user_id, user_name)
+        else:
+            result = {"error": "Missing user_id", "status": "failed"}
+
     else:
         print(f"Unknown task type: {task_type}")
         result = {"error": f"Unknown task type: {task_type}", "status": "failed"}

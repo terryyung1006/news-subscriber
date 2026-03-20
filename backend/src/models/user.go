@@ -8,12 +8,13 @@ import (
 )
 
 type User struct {
-	ID        string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	Email     string    `gorm:"type:varchar(255);not null;unique;index"`
-	GoogleID  string    `gorm:"type:varchar(255);not null;unique;index"`
-	Name      string    `gorm:"type:varchar(255);not null"`
-	CreatedAt time.Time `gorm:"not null;default:now()"`
-	UpdatedAt time.Time `gorm:"not null;default:now()"`
+	ID                  string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	Email               string    `gorm:"type:varchar(255);not null;unique;index"`
+	GoogleID            string    `gorm:"type:varchar(255);not null;unique;index"`
+	Name                string    `gorm:"type:varchar(255);not null"`
+	OnboardingCompleted bool      `gorm:"not null;default:false"`
+	CreatedAt           time.Time `gorm:"not null;default:now()"`
+	UpdatedAt           time.Time `gorm:"not null;default:now()"`
 }
 
 type InviteCode struct {
