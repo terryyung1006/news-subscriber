@@ -19,3 +19,6 @@ backend/test_output.json
 # Python cache
 __pycache__/
 *.pyc
+
+# Worktrees
+worktrees/
