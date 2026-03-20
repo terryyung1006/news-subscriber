@@ -21,14 +21,6 @@ services:
     volumes:
       - redis_data:/data
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: news_subscriber_ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-
   chroma:
     image: chromadb/chroma:latest
     container_name: news_subscriber_chroma
@@ -60,6 +52,5 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  ollama_data:
   chroma_data:
   rabbitmq_data:

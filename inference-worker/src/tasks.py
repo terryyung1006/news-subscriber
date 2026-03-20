@@ -1,17 +1,17 @@
 import os
 import json
 import re
-from langchain_community.chat_models import ChatOllama
+from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
-# Initialize the LLM (Ollama)
-# Make sure the model is pulled: `docker exec -it news_subscriber_ollama ollama pull deepseek-r1:1.5b`
-llm = ChatOllama(
-    model="deepseek-r1:1.5b",
-    base_url="http://localhost:11434",
+# Initialize the LLM (Claude)
+llm = ChatAnthropic(
+    model="claude-sonnet-4-6",
+    api_key=os.getenv("ANTHROPIC_API_KEY"),
     temperature=0.7,
+    max_tokens=1024,
 )
 
 def process_question(question: str, user_id: str, user_name: str = "User"):

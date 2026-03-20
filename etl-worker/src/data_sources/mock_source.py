@@ -10,9 +10,11 @@ import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional
 
+import os
+
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain_community.llms import Ollama
+from langchain_anthropic import ChatAnthropic
 from loguru import logger
 
 from .base import DataSource, NewsItem
@@ -28,15 +30,15 @@ class MockFinancialNewsSource(DataSource):
     """
 
     def __init__(
-        self, news_count: int = 10, use_llm: bool = True, model_name: str = "llama2"
+        self, news_count: int = 10, use_llm: bool = True, model_name: str = "claude-haiku-4-5-20251001"
     ):
         """
         Initialize the mock data source.
 
         Args:
             news_count: Number of mock news items to generate
-            use_llm: Whether to use local LLM for content generation
-            model_name: Name of the Ollama model to use
+            use_llm: Whether to use Claude API for content generation
+            model_name: Name of the Claude model to use
         """
         self.news_count = news_count
         self.use_llm = use_llm
@@ -51,15 +53,15 @@ class MockFinancialNewsSource(DataSource):
         self._generate_mock_data()
 
     def _initialize_llm(self) -> None:
-        """Initialize the LangChain LLM with Ollama."""
+        """Initialize the LangChain LLM with Claude."""
         try:
             config = get_config()
-            # Initialize Ollama LLM
-            self._llm = Ollama(
+            # Initialize Claude LLM
+            self._llm = ChatAnthropic(
                 model=self.model_name,
-                base_url=config.get_string("OLLAMA_BASE_URL", "http://localhost:11434"),
+                api_key=os.getenv("ANTHROPIC_API_KEY"),
                 temperature=config.get("OLLAMA_TEMPERATURE", 0.8),
-                timeout=config.get_int("OLLAMA_TIMEOUT", 30),
+                max_tokens=1024,
             )
 
             # Create a prompt template for financial news generation
@@ -85,7 +87,7 @@ CONTENT: [Your content here] (make sure this is one line)
             self._llm_chain = LLMChain(llm=self._llm, prompt=prompt_template)
 
             logger.info(
-                f"Initialized LangChain LLM with Ollama model: {self.model_name}"
+                f"Initialized LangChain LLM with Claude model: {self.model_name}"
             )
 
         except ImportError as e:
@@ -308,7 +310,7 @@ CONTENT: [Your content here] (make sure this is one line)
     @property
     def source_name(self) -> str:
         """Get the name of the mock data source."""
-        return f"Mock Financial News (Ollama + {self.model_name})"
+        return f"Mock Financial News (Claude + {self.model_name})"
 
     def _generate_mock_data(self) -> None:
         """Generate realistic mock financial news data using LLM or fallback."""
@@ -357,7 +359,7 @@ CONTENT: [Your content here] (make sure this is one line)
                     "read_time": f"{random.randint(2, 8)} min",
                     "author": f"Mock Author {random.randint(1, 100)}",
                     "tags": [category, source.lower(), sentiment],
-                    "generated_by": f"ollama_{self.model_name}"
+                    "generated_by": f"claude_{self.model_name}"
                     if self.use_llm
                     else "fallback_templates",
                 },
@@ -366,5 +368,5 @@ CONTENT: [Your content here] (make sure this is one line)
             self._mock_news.append(news_item)
 
         logger.info(
-            f"Generated {len(self._mock_news)} mock news items using {'Ollama LLM' if self.use_llm else 'fallback templates'}"
+            f"Generated {len(self._mock_news)} mock news items using {'Claude LLM' if self.use_llm else 'fallback templates'}"
         )

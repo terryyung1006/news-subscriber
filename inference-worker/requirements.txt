@@ -1,5 +1,4 @@
 pika
 langchain
-langchain-community
+langchain-anthropic
 python-dotenv
-openai
