@@ -1,17 +1,20 @@
 import os
 import json
 import re
-from langchain_community.chat_models import ChatOllama
+from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
-# Initialize the LLM (Ollama)
-# Make sure the model is pulled: `docker exec -it news_subscriber_ollama ollama pull deepseek-r1:1.5b`
-llm = ChatOllama(
-    model="deepseek-r1:1.5b",
-    base_url="http://localhost:11434",
+load_dotenv()
+
+# Initialize the LLM (Google Gemini)
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash",
+    google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0.7,
+    max_output_tokens=1024,
 )
 
 def process_question(question: str, user_id: str, user_name: str = "User"):

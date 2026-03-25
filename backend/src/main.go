@@ -25,6 +25,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+	// Initialize Redis
+	tools.InitRedis()
+
 	// Initialize RabbitMQ
 	if err := tools.InitRabbitMQ(cfg.RabbitMQ.URL); err != nil {
 		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
@@ -199,6 +202,40 @@ func main() {
 			resp, err := svc.SendOnboardingMessage(context.Background(), &req)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Service error: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		// Password login endpoint
+		httpMux.HandleFunc("/api/auth/password-login", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			if r.Method != "POST" {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+
+			var req service.PasswordLoginRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, "Invalid request body", http.StatusBadRequest)
+				return
+			}
+
+			resp, err := svc.PasswordLogin(context.Background(), &req)
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 				return
 			}
 

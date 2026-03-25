@@ -43,11 +43,18 @@ func NewDB(cfg *config.Config) (*DB, error) {
 
 // Migrate runs database migrations
 func (db *DB) Migrate() error {
-	return db.AutoMigrate(
+	if err := db.AutoMigrate(
 		&models.User{},
 		&models.InviteCode{},
 		&models.UserMemory{},
-	)
+	); err != nil {
+		return err
+	}
+
+	// Make google_id nullable (AutoMigrate won't drop NOT NULL constraints)
+	db.Exec("ALTER TABLE users ALTER COLUMN google_id DROP NOT NULL")
+
+	return nil
 }
 
 // Reset drops all tables and recreates them (use with caution!)

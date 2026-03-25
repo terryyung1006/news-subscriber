@@ -51,11 +51,9 @@ VECTOR_STORAGE_INCLUDE_METADATA: true
 VECTOR_STORAGE_METADATA_FIELDS:
   ["title", "source", "published_date", "category", "sentiment"]
 
-# Ollama LLM Configuration
-OLLAMA_BASE_URL: "http://localhost:11434"
-OLLAMA_DEFAULT_MODEL: "llama3.2:3b"
-OLLAMA_TIMEOUT: 30
-OLLAMA_TEMPERATURE: 0.8
+# Claude LLM Configuration
+CLAUDE_DEFAULT_MODEL: "claude-haiku-4-5-20251001"
+CLAUDE_TEMPERATURE: 0.8
 
 # Generation settings
 GENERATION_MAX_LENGTH: 200

@@ -55,6 +55,16 @@ export const apiClient = {
       if (!res.ok) throw new Error(data.error || 'Login failed');
       return data;
     },
+    passwordLogin: async (email: string, password: string) => {
+      const res = await fetch('/api/auth/password-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+      return data;
+    },
     completeSignup: async (idToken: string, inviteCode: string) => {
       const res = await fetch('/api/auth/complete-signup', {
         method: 'POST',

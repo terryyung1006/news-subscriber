@@ -1,5 +1,5 @@
 pika
+redis
 langchain
-langchain-community
+langchain-google-genai
 python-dotenv
-openai

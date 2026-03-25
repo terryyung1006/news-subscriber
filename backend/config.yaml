@@ -13,7 +13,7 @@ database:
   sslmode: "disable"
 
 google:
-  client_id: "769446235216-3lk6p56df5v6dtaiu91jed38tunr8h1p.apps.googleusercontent.com"  # TODO: Replace with actual client ID
+  client_id: "730064113886-a2k35bb9t7ctplnhn9m2e98r2ljij3sr.apps.googleusercontent.com"
 
 rabbitmq:
   url: "amqp://guest:guest@localhost:5672/"
