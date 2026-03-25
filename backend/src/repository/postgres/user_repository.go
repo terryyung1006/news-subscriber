@@ -47,7 +47,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 func (r *UserRepository) Create(ctx context.Context, email, googleID, name string) (*models.User, error) {
 	user := &models.User{
 		Email:    email,
-		GoogleID: googleID,
+		GoogleID: strPtr(googleID),
 		Name:     name,
 	}
 
@@ -57,6 +57,22 @@ func (r *UserRepository) Create(ctx context.Context, email, googleID, name strin
 
 	return user, nil
 }
+
+func (r *UserRepository) CreateWithPassword(ctx context.Context, email, name, passwordHash string) (*models.User, error) {
+	user := &models.User{
+		Email:        email,
+		Name:         name,
+		PasswordHash: strPtr(passwordHash),
+	}
+
+	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func strPtr(s string) *string { return &s }
 
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	var user models.User

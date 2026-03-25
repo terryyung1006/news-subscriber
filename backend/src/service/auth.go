@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/api/idtoken"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -137,6 +138,55 @@ func (s *Service) verifyGoogleToken(ctx context.Context, idToken string) (*Googl
 		Email:    email,
 		GoogleID: googleID,
 		Name:     name,
+	}, nil
+}
+
+type PasswordLoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type PasswordLoginResponse struct {
+	SessionToken string `json:"sessionToken"`
+	UserID       string `json:"userId"`
+	Name         string `json:"name"`
+}
+
+func (s *Service) PasswordLogin(ctx context.Context, req *PasswordLoginRequest) (*PasswordLoginResponse, error) {
+	user, err := s.userRepo.GetByEmail(ctx, req.Email)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check user: %w", err)
+	}
+
+	if user == nil {
+		// Auto-create user with password
+		hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, fmt.Errorf("failed to hash password: %w", err)
+		}
+		user, err = s.userRepo.CreateWithPassword(ctx, req.Email, req.Email, string(hash))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create user: %w", err)
+		}
+	} else {
+		// Verify password
+		if user.PasswordHash == nil {
+			return nil, fmt.Errorf("this account uses Google login")
+		}
+		if err := bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(req.Password)); err != nil {
+			return nil, fmt.Errorf("invalid password")
+		}
+	}
+
+	token, err := s.generateSessionToken()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	return &PasswordLoginResponse{
+		SessionToken: token,
+		UserID:       user.ID,
+		Name:         user.Name,
 	}, nil
 }
 
